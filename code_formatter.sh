@@ -34,7 +34,7 @@ done
 # Find all python files in code directories
 python_files=""
 for dir in $code_directories; do
-	python_files="$python_files `ls $dir/*.py`"
+    python_files="$python_files $(find $dir -name '*.py')"
 done
 [[ $# != 0 ]] && python_files=$@
 
@@ -45,16 +45,12 @@ done
 # - second, convert 4 spaces to tab character
 # - third, you can look a very pretty code 
 for file in $python_files; do
-	echo "Making beatiful $file..."
+	echo "Making beautiful $file..."
 	[[ ! -f $file ]] && echo "$file does not exist; $0 -h for more info" && exit
 	
 	yapf --style='{
 					based_on_style: pep8, 
 				   	indent_width: 4,
-					dedent_closing_brackets = true,
-					coalesce_brackets = true,
 					column_limit = 80
 			  	  }' -i $file
-	unexpand -t 4 $file > tmp.py
-	mv tmp.py $file
 done

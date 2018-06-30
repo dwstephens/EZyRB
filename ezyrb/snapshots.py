@@ -6,142 +6,153 @@ import numpy as np
 
 
 class Snapshots(object):
-	"""
-	:param string output_name: the name of the output to extract from the
-	solution files; it has to be the same for all the solution files.
-	:param string weight_name: the name of the weights.
-	:param string dformat: it allows to choose if the solutions are stored by
-	points or by cells; allowed strings are 'cell' or 'point'. Default value is
-	'cell'.
+    """
+    :param str output_name: the name of the output to extract from the solution
+        files; it has to be the same for all the solution files.
+    :param str weight_name: the name of the weights.
+    :param str dformat: it allows to choose if the solutions are stored by
+        points or by cells; allowed strings are 'cell' or 'point'. Default
+        value is 'cell'.
 
-	:cvar string _o_name: the output name.
-	:cvar string _w_name: the weight name.
-	:cvar numpy.ndarray _values: the solutions extracted from files, stored by
-		column.
-	:cvar numpy.ndarray _weighted: the weighted solutions extracted from files,
-		stored by column.
-	:cvar numpy.ndarray or int _weights: the weights extracted from a file.
-	:cvar string _dformat: the flag to select the data type.
-	:cvar list(string) _files: the files from which to extract the solutions.
+    :cvar str _o_name: the output name.
+    :cvar str _w_name: the weight name.
+    :cvar numpy.ndarray _values: the solutions extracted from files, stored by
+        column.
+    :cvar numpy.ndarray _weighted: the weighted solutions extracted from files,
+        stored by column.
+    :cvar numpy.ndarray or int _weights: the weights extracted from a file.
+    :cvar str _dformat: the flag to select the data type.
+    :cvar list(str) _files: the files from which to extract the solutions.
 
-	"""
+    """
 
-	def __init__(self, output_name, weight_name=None, dformat='cell'):
+    def __init__(self, output_name, weight_name=None, dformat='cell'):
 
-		self._o_name = output_name
-		self._w_name = weight_name
+        self._o_name = output_name
+        self._w_name = weight_name
 
-		self._values = np.ndarray(shape=(0, 0))
-		self._weighted = np.ndarray(shape=(0, 0))
-		self._weights = 1.0
+        self._values = np.ndarray(shape=(0, 0))
+        self._weighted = np.ndarray(shape=(0, 0))
+        self._weights = 1.0
 
-		self._dformat = dformat
+        self._dformat = dformat
 
-		self._files = []
+        self._files = []
 
-	def __getitem__(self, val):
-		ret = Snapshots(self._o_name, self._w_name, self._dformat)
-		ret._values = self._values[:, val]
-		ret._weighted = self._weighted[:, val]
-		ret._weights = self._weights
-		if isinstance(val, list):
-			ret._files = [self._files[i] for i in val]
-		else:
-			ret._files = self._files[val]
+    def __getitem__(self, val):
+        ret = Snapshots(self._o_name, self._w_name, self._dformat)
+        ret._values = self._values[:, val]
+        ret._weighted = self._weighted[:, val]
+        ret._weights = self._weights
+        if isinstance(val, list):
+            ret._files = [self._files[i] for i in val]
+        else:
+            ret._files = self._files[val]
 
-		return ret
+        return ret
 
-	@property
-	def files(self):
-		"""
-		The list of file from which to extract the snapshots.
-		"""
-		return self._files
+    @property
+    def files(self):
+        """
+        The list of file from which to extract the snapshots.
 
-	@property
-	def values(self):
-		"""
-		The snapshots; it is a *n* x *m* matrix that contains the snapshots
-		stored by column; *n* is the output dimension, *m* is the number of
-		snapshots.
-		"""
-		return self._values
+        :type: list(str)
+        """
+        return self._files
 
-	@property
-	def weighted(self):
-		"""
-		The weighted snapshots; it is a *n* x *m* matrix that contains the
-		snapshots stored by column; *n* is the output dimension, *m* is the
-		number of snapshots.
-		"""
-		return self._weighted
+    @property
+    def values(self):
+        """
+        The snapshots; it is a *n* x *m* matrix that contains the snapshots
+        stored by column; *n* is the output dimension, *m* is the number of
+        snapshots.
 
-	@property
-	def weights(self):
-		"""
-		The weights extracted.
-		"""
-		return self._weights
+        :type: numpy.ndarray
+        """
+        return self._values
 
-	@property
-	def size(self):
-		"""
-		The number of the snapshots.
-		"""
-		return self.values.shape[1]
+    @property
+    def weighted(self):
+        """
+        The weighted snapshots; it is a *n* x *m* matrix that contains the
+        snapshots stored by column; *n* is the output dimension, *m* is the
+        number of snapshots.
 
-	@property
-	def dimension(self):
-		"""
-		The dimension of the snapshots.
-		"""
-		return self.values.shape[0]
+        :type: numpy.ndarray
+        """
+        return self._weighted
 
-	def append(self, filename):
-		"""
-		Append the `filename` to the list of the solution files; update the
-		values and the weighted values with the extracted solution.
+    @property
+    def weights(self):
+        """
+        The weights extracted.
 
-		:param string filename: the name of file to append to the solution
-			files.
-		"""
-		if not isinstance(filename, str):
-			raise TypeError
+        :type: int or array_like
+        """
+        return self._weights
 
-		if not self.values.size and self._w_name:
+    @property
+    def size(self):
+        """
+        The number of the snapshots.
 
-			self._weights = FileHandler(filename).get_dataset(
-				self._w_name, self._dformat
-			)
+        :type: int
+        """
+        return self.values.shape[1]
 
-		self._files.append(filename)
+    @property
+    def dimension(self):
+        """
+        The dimension of the snapshots.
 
-		v = FileHandler(filename).get_dataset(self._o_name, self._dformat)
+        :type: int
+        """
+        return self.values.shape[0]
 
-		self._append_values(v)
-		self._append_weighted(v)
+    def append(self, filename):
+        """
+        Append the `filename` to the list of the solution files; update the
+        values and the weighted values with the extracted solution.
 
-	def _append_values(self, values):
-		"""
-		Private method to append an output.
-		
-		:param array_like values: the output.
-		"""
+        :param str filename: the name of file to append to the solution files.
+        """
+        if not isinstance(filename, str):
+            raise TypeError
 
-		array = np.asarray(values).reshape(-1, 1)
-		try:
-			self._values = np.append(self._values, array, 1)
-		except ValueError:
-			self._values = array
+        if not self.values.size and self._w_name:
 
-	def _append_weighted(self, values):
-		"""
-		Private method to append a weighted output.
-		
-		:param array_like values: the output.
-		"""
-		array = np.asarray(np.sqrt(self._weights) * values).reshape(-1, 1)
-		try:
-			self._weighted = np.append(self._weighted, array, 1)
-		except ValueError:
-			self._weighted = array
+            self._weights = FileHandler(filename).get_dataset(
+                self._w_name, self._dformat)
+
+        self._files.append(filename)
+
+        v = FileHandler(filename).get_dataset(self._o_name, self._dformat)
+
+        self._append_values(v)
+        self._append_weighted(v)
+
+    def _append_values(self, values):
+        """
+        Private method to append an output.
+
+        :param array_like values: the output.
+        """
+
+        array = np.asarray(values).reshape(-1, 1)
+        try:
+            self._values = np.append(self._values, array, 1)
+        except ValueError:
+            self._values = array
+
+    def _append_weighted(self, values):
+        """
+        Private method to append a weighted output.
+
+        :param array_like values: the output.
+        """
+        print(values.shape)
+        array = np.dot(np.sqrt(self._weights), values.T).reshape(-1, 1)
+        try:
+            self._weighted = np.append(self._weighted, array, 1)
+        except ValueError:
+            self._weighted = array

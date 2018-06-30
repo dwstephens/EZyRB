@@ -1,18 +1,21 @@
 Code Documentation
 ==================
 
-
 .. toctree::
-   :maxdepth: 2
+    :maxdepth: 2
 
-   points
-   snapshots
-   pod
-   filehandler
-   matlabhandler
-   vtkhandler
-   stlhandler
-   gui
-   online
-   offline
-   mapper
+    points
+    snapshots
+    podinterpolation
+    interpolation
+    parametricspace
+    filehandler
+    matlabhandler
+    vtkhandler
+    stlhandler
+    online
+    offline
+    mapper
+    utilities
+    rbf
+
